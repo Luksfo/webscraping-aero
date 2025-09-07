@@ -15,7 +15,7 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
 
   try {
     console.log('Acessando o site...');
-    await page.goto('https://seats.aero/search', { waitUntil: 'networkidle2' });
+    await page.goto('www.skyscanner.com.br', { waitUntil: 'networkidle2' });
 
     console.log('Simulando comportamento humano...');
     await page.mouse.move(100, 100);
@@ -129,3 +129,4 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
 };
 
 module.exports = { scrapeFlights };
+
