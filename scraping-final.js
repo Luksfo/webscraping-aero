@@ -6,7 +6,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const scrapeFlights = async ({ origin, destination, departureDate }) => {
   const browser = await puppeteer.launch({
-    headless: true, // Mantenha como 'true' para execução em segundo plano
+    headless: true, // Mude para 'false' se precisar depurar
     defaultViewport: null,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
@@ -14,33 +14,29 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
   const page = await browser.newPage();
 
   try {
-    console.log('Acessando o site...pika');
-    await page.goto('https://www.skyscanner.com.br', { waitUntil: 'networkidle2' });
-
-    console.log('Simulando comportamento humano...');
-    await page.mouse.move(100, 100);
-    await delay(6000);
-
-    // O Captcha é mais complexo e pode não ter um seletor estático.
-    // Removi a parte do captcha para simplificar, mas você pode adicionar
-    // uma lógica para lidar com ele caso apareça.
+    console.log('Acessando o site...');
+    await page.goto('https://www.skyscanner.com.br/', { waitUntil: 'networkidle2' });
+    await delay(6000); // Aumentei o delay inicial para 6 segundos
 
     console.log('Preenchendo campo de origem...');
-    await page.waitForSelector('input[id*="origin-input"]');
+    await page.waitForSelector('input[id*="origin-input"]', { timeout: 15000 });
     await page.click('input[id*="origin-input"]');
-    for (const char of origin) await page.keyboard.type(char, { delay: 200 });
-    await delay(1500);
-    await page.keyboard.press('Enter');
+    await delay(2000); // Adicionei um delay antes de digitar
+    for (const char of origin) await page.keyboard.type(char, { delay: 400 }); // Aumentei o delay da digitação
     await delay(2000);
+    await page.keyboard.press('Enter');
+    await delay(3000);
 
     console.log('Preenchendo campo de destino...');
-    await page.waitForSelector('input[id*="destination-input"]');
+    await page.waitForSelector('input[id*="destination-input"]', { timeout: 15000 });
     await page.click('input[id*="destination-input"]');
-    for (const char of destination) await page.keyboard.type(char, { delay: 200 });
-    await delay(1500);
-    await page.keyboard.press('Enter');
     await delay(2000);
+    for (const char of destination) await page.keyboard.type(char, { delay: 400 });
+    await delay(2000);
+    await page.keyboard.press('Enter');
+    await delay(3000);
 
+    // O restante do seu código segue a partir daqui
     console.log('Selecionando data...');
     const [year, month, day] = departureDate.split('-');
     await page.waitForSelector('button[id*="date-input"]');
@@ -104,7 +100,7 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
         console.error('Nenhum voo encontrado.');
         return { result: 'Nenhum voo encontrado.' };
     }
-    
+
   } catch (error) {
     console.error('Erro durante o scraping:', error);
     throw error;
@@ -115,5 +111,3 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
 };
 
 module.exports = { scrapeFlights };
-
-
