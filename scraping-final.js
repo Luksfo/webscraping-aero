@@ -28,34 +28,28 @@ const scrapeFlights = async ({ origin, destination, date }) => {
 
         // Preenche o campo de origem usando um seletor mais genérico
         console.log('Preenchendo campo de origem...');
-        const originInputSelector = 'input[type="text"]';
-        const inputs = await page.$$(originInputSelector);
-
-        if (inputs.length < 2) {
-            console.error('Não foram encontrados campos de origem e destino.');
-            throw new Error('Campos de voo não encontrados.');
-        }
-
-        await inputs[0].focus();
-        await page.keyboard.type(origin, { delay: 100 });
+        const originInputSelector = 'input[placeholder="De onde?"]';
+        await page.waitForSelector(originInputSelector, { timeout: 15000 });
+        await page.type(originInputSelector, origin, { delay: 100 });
         await delay(2000);
         await page.keyboard.press('Enter');
         await delay(2000);
 
         // Preenche o campo de destino
         console.log('Preenchendo campo de destino...');
-        await inputs[1].focus();
-        await page.keyboard.type(destination, { delay: 100 });
+        const destinationInputSelector = 'input[placeholder="Para onde?"]';
+        await page.waitForSelector(destinationInputSelector, { timeout: 15000 });
+        await page.type(destinationInputSelector, destination, { delay: 100 });
         await delay(2000);
         await page.keyboard.press('Enter');
         await delay(2000);
         
         // Clica no campo de datas para abrir o calendário
         console.log('Selecionando a data de partida...');
-        const departureDateSelector = 'div[jsname="d5c5i"]';
-        await page.waitForSelector(departureDateSelector, { timeout: 10000 });
-        await page.click(departureDateSelector);
-        await delay(2000);
+        const datePickerSelector = '.eEgeYd';
+        await page.waitForSelector(datePickerSelector, { timeout: 15000 });
+        await page.click(datePickerSelector);
+        await delay(3000); // Aumento no tempo de espera para o calendário abrir
         
         // Seleciona a data de partida (usando o seletor com base no texto)
         const daySelector = `div[aria-label*="${date}"]`;
@@ -64,14 +58,14 @@ const scrapeFlights = async ({ origin, destination, date }) => {
         await delay(2000);
         
         // Clica no botão "Concluído"
-        const doneButtonSelector = 'button[aria-label="Concluído"]';
+        const doneButtonSelector = 'button.VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXB-k8QSS.VfPpkd-LgbsSe-OWXEXB-dgl2Hf';
         await page.waitForSelector(doneButtonSelector, { timeout: 10000 });
         await page.click(doneButtonSelector);
         await delay(5000);
 
         // Clica no botão de busca "Explore"
         console.log('Clicando no botão de busca...');
-        const exploreButtonSelector = 'button[aria-label="Explore"]';
+        const exploreButtonSelector = 'button.VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXB-k8QSS.VfPpkd-LgbsSe-OWXEXB-dgl2Hf';
         await page.waitForSelector(exploreButtonSelector, { timeout: 10000 });
         await page.click(exploreButtonSelector);
         await delay(8000);
