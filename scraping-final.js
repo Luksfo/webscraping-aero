@@ -6,7 +6,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const scrapeFlights = async ({ origin, destination }) => {
     const browser = await puppeteer.launch({
-        headless: true,
+        headless: true, // Mude para 'false' para ver o navegador
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -22,7 +22,12 @@ const scrapeFlights = async ({ origin, destination }) => {
         console.log('Preenchendo campo de origem...');
         const originSelector = 'input[placeholder="De onde?"]';
         await page.waitForSelector(originSelector, { timeout: 15000 });
-        await page.click(originSelector, { clickCount: 3 });
+        const originInput = await page.$(originSelector);
+        
+        // Clica no campo de origem usando o mouse
+        const originBox = await originInput.boundingBox();
+        await page.mouse.click(originBox.x + originBox.width / 2, originBox.y + originBox.height / 2);
+        
         await delay(1000);
         await page.keyboard.type(origin, { delay: 200 });
         await delay(2000);
@@ -37,7 +42,12 @@ const scrapeFlights = async ({ origin, destination }) => {
         console.log('Preenchendo campo de destino...');
         const destinationSelector = 'input[placeholder="Para onde?"]';
         await page.waitForSelector(destinationSelector, { timeout: 15000 });
-        await page.click(destinationSelector, { clickCount: 3 });
+        const destinationInput = await page.$(destinationSelector);
+        
+        // Clica no campo de destino usando o mouse
+        const destinationBox = await destinationInput.boundingBox();
+        await page.mouse.click(destinationBox.x + destinationBox.width / 2, destinationBox.y + destinationBox.height / 2);
+        
         await delay(1000);
         await page.keyboard.type(destination, { delay: 200 });
         await delay(2000);
