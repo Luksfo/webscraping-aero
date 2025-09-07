@@ -6,7 +6,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const scrapeFlights = async ({ origin, destination, date }) => {
     const browser = await puppeteer.launch({
-        headless: true, // Mantenha como 'true' em produção
+        headless: true, // Keep 'true' for production
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -24,9 +24,9 @@ const scrapeFlights = async ({ origin, destination, date }) => {
     try {
         console.log('Acessando o site do Google Voos...');
         await page.goto('https://www.google.com/flights/flights', { waitUntil: 'networkidle2' });
-        await delay(8000); // Aumento no tempo de espera inicial
+        await delay(8000);
 
-        // Preenche o campo de origem usando um seletor mais genérico
+        // Preenche o campo de origem
         console.log('Preenchendo campo de origem...');
         const originInputSelector = 'input[placeholder="De onde?"]';
         await page.waitForSelector(originInputSelector, { timeout: 15000 });
@@ -46,10 +46,10 @@ const scrapeFlights = async ({ origin, destination, date }) => {
         
         // Clica no campo de datas para abrir o calendário
         console.log('Selecionando a data de partida...');
-        const datePickerSelector = '.eEgeYd';
+        const datePickerSelector = 'div[aria-label^="Data de partida"]';
         await page.waitForSelector(datePickerSelector, { timeout: 15000 });
         await page.click(datePickerSelector);
-        await delay(3000); // Aumento no tempo de espera para o calendário abrir
+        await delay(3000);
         
         // Seleciona a data de partida (usando o seletor com base no texto)
         const daySelector = `div[aria-label*="${date}"]`;
@@ -58,14 +58,14 @@ const scrapeFlights = async ({ origin, destination, date }) => {
         await delay(2000);
         
         // Clica no botão "Concluído"
-        const doneButtonSelector = 'button.VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXB-k8QSS.VfPpkd-LgbsSe-OWXEXB-dgl2Hf';
+        const doneButtonSelector = 'button[aria-label="Concluído"]';
         await page.waitForSelector(doneButtonSelector, { timeout: 10000 });
         await page.click(doneButtonSelector);
         await delay(5000);
 
         // Clica no botão de busca "Explore"
         console.log('Clicando no botão de busca...');
-        const exploreButtonSelector = 'button.VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXB-k8QSS.VfPpkd-LgbsSe-OWXEXB-dgl2Hf';
+        const exploreButtonSelector = 'button[aria-label="Explore"]';
         await page.waitForSelector(exploreButtonSelector, { timeout: 10000 });
         await page.click(exploreButtonSelector);
         await delay(8000);
