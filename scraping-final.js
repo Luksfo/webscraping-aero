@@ -25,10 +25,9 @@ const scrapeFlights = async ({ origin, destination }) => {
         await page.waitForSelector(resultsContainerSelector, { timeout: 30000 });
 
         const flights = await page.$$eval(`${resultsContainerSelector} > li`, elements => {
-            // Mapeia cada elemento da lista para extrair os dados com seletores atualizados
+            // Mapeia cada elemento da lista para extrair os dados com os novos seletores
             return elements.map(el => {
-                // Seletores atualizados para preço, companhia aérea e link
-                const priceElement = el.querySelector('[jsslot] [aria-label*="Preço"]');
+                const priceElement = el.querySelector('div[jsslot] span[aria-label]');
                 const price = priceElement ? priceElement.textContent.trim() : 'N/A';
                 
                 const airlineElement = el.querySelector('div[jsname="j1fBcd"]');
