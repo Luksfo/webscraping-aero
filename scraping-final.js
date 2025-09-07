@@ -14,7 +14,7 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
     const page = await browser.newPage();
 
     try {
-        console.log('Acessando o site do Google Flights...');
+        console.log('Acessando o site do Google Voos...');
         await page.goto('https://www.google.com/flights/flights', { waitUntil: 'networkidle2' });
         await delay(3000);
 
@@ -29,16 +29,19 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
         await page.keyboard.press('Enter');
         await delay(2000);
 
-        // Preenche o campo de destino usando a posição
+        // Preenche o campo de destino
         console.log('Preenchendo campo de destino...');
-        const destinationSelector = 'input[placeholder*="Para"]';
-        await page.waitForSelector(destinationSelector, { timeout: 10000 });
-        await page.click(destinationSelector, { clickCount: 3 });
-        await delay(1000);
-        await page.keyboard.type(destination, { delay: 200 });
-        await delay(2000);
-        await page.keyboard.press('Enter');
-        await delay(2000);
+        const inputFields = await page.$$('input[placeholder*="Cidade"]');
+        if (inputFields.length > 1) {
+            await inputFields[1].click({ clickCount: 3 });
+            await delay(1000);
+            await page.keyboard.type(destination, { delay: 200 });
+            await delay(2000);
+            await page.keyboard.press('Enter');
+            await delay(2000);
+        } else {
+            throw new Error('Campo de destino não encontrado.');
+        }
 
         // Clica no botão de busca
         console.log('Clicando no botão de busca...');
