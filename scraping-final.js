@@ -16,24 +16,16 @@ const scrapeHotels = async ({ destination, checkinDate, checkoutDate }) => {
   try {
     console.log('Acessando o Booking.com...');
     await page.goto('https://www.booking.com/', { waitUntil: 'domcontentloaded' });
-    await delay(5000); // Aumentado para 5s para garantir que a página carregue
+    await delay(5000); // Aguarda para garantir que a página carregue
 
     console.log('Preenchendo destino...');
-    const destinationSelector = 'div[data-testid="destination-container"]';
+    const destinationSelector = 'input[name="ss"]';
 
     await page.waitForSelector(destinationSelector, { timeout: 60000 });
-    const destinationElement = await page.$(destinationSelector);
-    const box = await destinationElement.boundingBox();
-    
-    if (box) {
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-    }
-    
-    await destinationElement.type(destination);
+    await page.type(destinationSelector, destination);
     await delay(2000); // Aumentado o delay para garantir que a lista de sugestões apareça
 
-    // CORREÇÃO: Usando o teclado para selecionar o primeiro resultado
+    // Usando o teclado para selecionar o primeiro resultado
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
     await delay(1000);
