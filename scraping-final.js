@@ -21,7 +21,7 @@ const scrapeFlights = async ({ origin, destination, departureDate, returnDate })
         // Preenche o campo de origem
         console.log('Preenchendo campo de origem...');
         const originSelector = 'input[aria-label="De onde? "]';
-        await page.waitForSelector(originSelector, { timeout: 10000 });
+        await page.waitForSelector(originSelector, { timeout: 15000 }); // Tempo aumentado
         await page.click(originSelector, { clickCount: 3 });
         await delay(1000);
         await page.keyboard.type(origin, { delay: 200 });
@@ -32,7 +32,7 @@ const scrapeFlights = async ({ origin, destination, departureDate, returnDate })
         // Preenche o campo de destino
         console.log('Preenchendo campo de destino...');
         const destinationSelector = 'input[aria-label="Para onde? "]';
-        await page.waitForSelector(destinationSelector, { timeout: 10000 });
+        await page.waitForSelector(destinationSelector, { timeout: 15000 }); // Tempo aumentado
         await page.click(destinationSelector, { clickCount: 3 });
         await delay(1000);
         await page.keyboard.type(destination, { delay: 200 });
@@ -47,8 +47,6 @@ const scrapeFlights = async ({ origin, destination, departureDate, returnDate })
         await page.click(idaButtonSelector);
         await delay(2000);
 
-        // Aqui você pode adicionar a lógica para selecionar a data de ida, se precisar
-
         // Clica no botão de data de volta para abrir o calendário
         if (returnDate) {
             console.log('Abrindo calendário para data de volta...');
@@ -56,7 +54,6 @@ const scrapeFlights = async ({ origin, destination, departureDate, returnDate })
             await page.waitForSelector(voltaButtonSelector);
             await page.click(voltaButtonSelector);
             await delay(2000);
-            // Aqui você pode adicionar a lógica para selecionar a data de volta
         }
 
         // Clica no botão de busca
