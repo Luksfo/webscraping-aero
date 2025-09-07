@@ -2,9 +2,11 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const scrapeFlights = async ({ origin, destination }) => {
     const browser = await puppeteer.launch({
-        headless: true,
+        headless: false, // Deixei como 'false' para que você possa ver o clique acontecendo
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -16,36 +18,39 @@ const scrapeFlights = async ({ origin, destination }) => {
         
         console.log(`Acessando a URL de busca: ${searchUrl}`);
         await page.goto(searchUrl, { waitUntil: 'networkidle2' });
+        await delay(5000); // Adiciona um delay extra para a página carregar completamente
 
-        console.log('Extraindo informações dos voos...');
-        const resultsContainerSelector = 'ul[role="listbox"]';
-        await page.waitForSelector(resultsContainerSelector, { timeout: 30000 });
+        console.log('Tentando clicar no primeiro resultado de voo...');
+        // Localiza o primeiro item da lista de resultados
+        const firstFlightSelector = 'ul[role="listbox"] > li:first-child';
+        
+        const firstFlightElement = await page.waitForSelector(firstFlightSelector, { timeout: 30000 });
 
-        const flights = await page.$$eval(`${resultsContainerSelector} > li`, elements => {
-            return elements.map(el => {
-                // Novo seletor definitivo para o preço
-                const priceElement = el.querySelector('div[aria-hidden="true"][jsslot] span[aria-label]');
-                const price = priceElement ? priceElement.textContent.trim() : 'N/A';
-                
-                // Novo seletor para a companhia aérea
-                const airlineElement = el.querySelector('div.sSHqwe.tPgKwe.ogfYpf');
-                const airline = airlineElement ? airlineElement.textContent.trim() : 'N/A';
-                
-                // O seletor do link continua funcionando bem
-                const linkElement = el.closest('a');
-                const link = linkElement ? linkElement.href : 'N/A';
+        if (firstFlightElement) {
+            console.log('Primeiro resultado encontrado. Clicando nele...');
+            await firstFlightElement.click();
+            console.log('Clique realizado. Acessando a página de detalhes do voo...');
+            
+            // Aguarda a navegação para a nova página
+            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+            await delay(5000); // Adiciona um delay para a página de detalhes carregar
 
-                return { price, airline, link };
-            });
-        });
+            // A partir daqui, você pode adicionar a lógica para extrair os dados da página de detalhes
+            // Por enquanto, vamos apenas confirmar que funcionou
+            const newUrl = page.url();
+            console.log(`A URL atual é: ${newUrl}`);
+            
+            if (newUrl !== searchUrl) {
+                console.log('O script navegou com sucesso para a página de detalhes do voo.');
+                return { result: 'Navegação para a página de detalhes do voo bem-sucedida.' };
+            } else {
+                return { result: 'O clique não resultou em navegação.' };
+            }
 
-        if (flights.length > 0) {
-            console.log('Voos extraídos com sucesso.');
-            return { result: flights };
         } else {
-            console.error('Nenhum voo encontrado.');
-            return { result: 'Nenhum voo encontrado.' };
+            return { result: 'Nenhum resultado de voo encontrado para clicar.' };
         }
+
     } catch (error) {
         console.error('Erro durante o scraping:', error);
         throw error;
