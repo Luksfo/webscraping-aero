@@ -1,9 +1,7 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
-curl -X POST http://localhost:8080/scrape-flights \
--H "Content-Type: application/json" \
--d '{"origin": "Guarulhos", "destination": "Lima", "date": "11 de out"}'
+
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const scrapeFlights = async ({ origin, destination, date }) => {
@@ -26,22 +24,28 @@ const scrapeFlights = async ({ origin, destination, date }) => {
     try {
         console.log('Acessando o site do Google Voos...');
         await page.goto('https://www.google.com/flights/flights', { waitUntil: 'networkidle2' });
-        await delay(5000);
+        await delay(8000); // Aumento no tempo de espera inicial
 
-        // Preenche o campo de origem
+        // Preenche o campo de origem usando um seletor mais genérico
         console.log('Preenchendo campo de origem...');
-        const originInputSelector = 'input[placeholder="De onde?"]';
-        await page.waitForSelector(originInputSelector, { timeout: 15000 });
-        await page.type(originInputSelector, origin, { delay: 100 });
+        const originInputSelector = 'input[type="text"]';
+        const inputs = await page.$$(originInputSelector);
+
+        if (inputs.length < 2) {
+            console.error('Não foram encontrados campos de origem e destino.');
+            throw new Error('Campos de voo não encontrados.');
+        }
+
+        await inputs[0].focus();
+        await page.keyboard.type(origin, { delay: 100 });
         await delay(2000);
         await page.keyboard.press('Enter');
         await delay(2000);
 
         // Preenche o campo de destino
         console.log('Preenchendo campo de destino...');
-        const destinationInputSelector = 'input[placeholder="Para onde?"]';
-        await page.waitForSelector(destinationInputSelector, { timeout: 15000 });
-        await page.type(destinationInputSelector, destination, { delay: 100 });
+        await inputs[1].focus();
+        await page.keyboard.type(destination, { delay: 100 });
         await delay(2000);
         await page.keyboard.press('Enter');
         await delay(2000);
@@ -103,4 +107,3 @@ const scrapeFlights = async ({ origin, destination, date }) => {
 };
 
 module.exports = { scrapeFlights };
-
