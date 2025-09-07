@@ -1,42 +1,49 @@
 const express = require('express');
-const { scrapeFlights } = require('./scraping-final');
+const { scrapeHotels } = require('./scraping-final');
 
 const app = express();
 app.use(express.json());
 
-// Endpoint para buscar passagens
-app.post('/search-flights', async (req, res) => {
-  const { client, number, textMessage, origin, destination, departureDate } = req.body;
+// Endpoint para buscar hotéis
+app.post('/search-hotels', async (req, res) => {
+    const { client, number, textMessage, destination, checkinDate, checkoutDate } = req.body;
 
-  // Validação básica dos dados recebidos
-  if (!client || !number || !textMessage || !origin || !destination || !departureDate) {
-    return res.status(400).json({
-      error: 'Os campos client, number, textMessage, origin, destination e departureDate são obrigatórios.',
-    });
-  }
+    // Validação básica dos dados recebidos
+    if (!client || !number || !textMessage || !destination || !checkinDate || !checkoutDate) {
+        return res.status(400).json({
+            error: 'Os campos client, number, textMessage, destination, checkinDate e checkoutDate são obrigatórios.',
+        });
+    }
 
-  // Converter a data para o formato YYYY-MM-DD
-  const [day, month, year] = departureDate.split('/');
-  const formattedDate = `${year}-${month}-${day}`;
+    // Converter as datas para o formato YYYY-MM-DD
+    const [checkinDay, checkinMonth, checkinYear] = checkinDate.split('/');
+    const formattedCheckinDate = `${checkinYear}-${checkinMonth}-${checkinDay}`;
+    
+    const [checkoutDay, checkoutMonth, checkoutYear] = checkoutDate.split('/');
+    const formattedCheckoutDate = `${checkoutYear}-${checkoutMonth}-${checkoutDay}`;
 
-  try {
-    const result = await scrapeFlights({ origin, destination, departureDate: formattedDate });
+    try {
+        const result = await scrapeHotels({
+            destination,
+            checkin: formattedCheckinDate,
+            checkout: formattedCheckoutDate
+        });
 
-    // Retornar o texto diretamente no campo "results"
-    return res.json({
-      client,
-      number,
-      textMessage,
-      results: result.result, // Acessa diretamente o texto do retorno
-    });
-  } catch (error) {
-    console.error('Erro durante a execução do endpoint:', error);
-    return res.status(500).json({ error: 'Erro durante o scraping. Tente novamente mais tarde.' });
-  }
+        // Retornar os resultados
+        return res.json({
+            client,
+            number,
+            textMessage,
+            results: result.result,
+        });
+    } catch (error) {
+        console.error('Erro durante a execução do endpoint:', error);
+        return res.status(500).json({ error: 'Erro durante o scraping. Tente novamente mais tarde.' });
+    }
 });
 
 // Iniciar o servidor
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
