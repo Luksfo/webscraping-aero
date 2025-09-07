@@ -4,7 +4,7 @@ puppeteer.use(StealthPlugin());
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const scrapeFlights = async ({ origin, destination, departureDate, returnDate }) => {
+const scrapeFlights = async ({ origin, destination }) => {
     const browser = await puppeteer.launch({
         headless: true, // Mude para 'false' para ver o navegador
         defaultViewport: null,
@@ -16,31 +16,24 @@ const scrapeFlights = async ({ origin, destination, departureDate, returnDate })
     try {
         console.log('Acessando o site do Google Voos...');
         await page.goto('https://www.google.com/flights/flights', { waitUntil: 'networkidle2' });
-        await delay(5000); // Aumento no delay inicial para a página carregar
+        await delay(5000);
 
-        // Seleciona todos os campos de texto na página
-        console.log('Buscando campos de input de voo...');
-        const inputSelectors = 'input[type="text"]';
-        await page.waitForSelector(inputSelectors, { timeout: 20000 });
-        const inputs = await page.$$(inputSelectors);
-
-        if (inputs.length < 2) {
-            console.error('Não foram encontrados campos de origem e destino.');
-            throw new Error('Campos de voo não encontrados.');
-        }
-
-        // Preenche o campo de origem (o primeiro input de texto)
+        // Preenche o campo de origem com o seletor 'aria-label'
         console.log('Preenchendo campo de origem...');
-        await inputs[0].click({ clickCount: 3 });
+        const originSelector = 'input[aria-label="De onde?"]';
+        await page.waitForSelector(originSelector, { timeout: 15000 });
+        await page.click(originSelector, { clickCount: 3 });
         await delay(1000);
         await page.keyboard.type(origin, { delay: 200 });
         await delay(2000);
         await page.keyboard.press('Enter');
         await delay(2000);
 
-        // Preenche o campo de destino (o segundo input de texto)
+        // Preenche o campo de destino com o seletor 'aria-label'
         console.log('Preenchendo campo de destino...');
-        await inputs[1].click({ clickCount: 3 });
+        const destinationSelector = 'input[aria-label="Para onde?"]';
+        await page.waitForSelector(destinationSelector, { timeout: 15000 });
+        await page.click(destinationSelector, { clickCount: 3 });
         await delay(1000);
         await page.keyboard.type(destination, { delay: 200 });
         await delay(2000);
@@ -49,7 +42,7 @@ const scrapeFlights = async ({ origin, destination, departureDate, returnDate })
 
         // Clica no botão de busca
         console.log('Clicando no botão de busca...');
-        const searchButtonSelector = 'button[aria-label*="Pesquisar"]';
+        const searchButtonSelector = 'button[aria-label="Explore"]';
         await page.waitForSelector(searchButtonSelector, { timeout: 10000 });
         await page.click(searchButtonSelector);
         await delay(8000);
