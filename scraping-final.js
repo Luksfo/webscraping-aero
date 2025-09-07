@@ -4,9 +4,9 @@ puppeteer.use(StealthPlugin());
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const scrapeFlights = async ({ origin, destination, departureDate, returnDate }) => {
+const scrapeFlights = async ({ origin, destination }) => {
     const browser = await puppeteer.launch({
-        headless: true, // Mude para 'false' para ver o navegador
+        headless: true,
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -18,41 +18,38 @@ const scrapeFlights = async ({ origin, destination, departureDate, returnDate })
         await page.goto('https://www.google.com/flights/flights', { waitUntil: 'networkidle2' });
         await delay(5000);
 
-        const inputSelectors = 'input[type="text"]';
-        await page.waitForSelector(inputSelectors, { timeout: 20000 });
-        const inputs = await page.$$(inputSelectors);
-
-        if (inputs.length < 2) {
-            console.error('Não foram encontrados campos de origem e destino.');
-            throw new Error('Campos de voo não encontrados.');
-        }
-
-        // Preenche o campo de origem (o primeiro input de texto)
+        // Preenche o campo de origem
         console.log('Preenchendo campo de origem...');
-        await inputs[0].click({ clickCount: 3 });
+        const originSelector = 'input[placeholder="De onde?"]';
+        await page.waitForSelector(originSelector, { timeout: 15000 });
+        await page.click(originSelector, { clickCount: 3 });
         await delay(1000);
         await page.keyboard.type(origin, { delay: 200 });
         await delay(2000);
+        
+        // Espera e seleciona a primeira sugestão
+        const suggestionSelector = '.yL6c3b';
+        await page.waitForSelector(suggestionSelector, { timeout: 10000 });
         await page.keyboard.press('Enter');
         await delay(2000);
 
-        // Espera o campo de destino se tornar clicável
-        console.log('Esperando o campo de destino se tornar clicável...');
-        await page.waitForSelector('input[type="text"]:nth-of-type(2)', { visible: true, timeout: 15000 });
-
-        // Preenche o campo de destino (o segundo input de texto)
+        // Preenche o campo de destino
         console.log('Preenchendo campo de destino...');
-        const updatedInputs = await page.$$(inputSelectors); // Re-seleciona os inputs para garantir que estão atualizados
-        await updatedInputs[1].click({ clickCount: 3 });
+        const destinationSelector = 'input[placeholder="Para onde?"]';
+        await page.waitForSelector(destinationSelector, { timeout: 15000 });
+        await page.click(destinationSelector, { clickCount: 3 });
         await delay(1000);
         await page.keyboard.type(destination, { delay: 200 });
         await delay(2000);
+
+        // Espera e seleciona a primeira sugestão
+        await page.waitForSelector(suggestionSelector, { timeout: 10000 });
         await page.keyboard.press('Enter');
         await delay(2000);
-
+        
         // Clica no botão de busca
         console.log('Clicando no botão de busca...');
-        const searchButtonSelector = 'button[aria-label*="Pesquisar"]';
+        const searchButtonSelector = 'button[aria-label="Explore"]';
         await page.waitForSelector(searchButtonSelector, { timeout: 10000 });
         await page.click(searchButtonSelector);
         await delay(8000);
