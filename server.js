@@ -14,7 +14,7 @@ app.post('/search-hotels', async (req, res) => {
       error: 'Os campos client, number, textMessage, destination, checkinDate e checkoutDate são obrigatórios.',
     });
   }
-
+// Corrigido o erro de porta na Railway
   try {
     const result = await scrapeHotels({ destination, checkinDate, checkoutDate });
 
@@ -35,4 +35,5 @@ const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
+
 
