@@ -30,13 +30,12 @@ const scrapeHotels = async ({ destination, checkinDate, checkoutDate }) => {
       await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     }
     
-    // CORREÇÃO: Usando o método .type() no elemento encontrado
     await destinationElement.type(destination);
-    await delay(1000);
+    await delay(2000); // Aumentado o delay para garantir que a lista de sugestões apareça
 
-    const firstResultSelector = 'ul[role="listbox"] li:first-child';
-    await page.waitForSelector(firstResultSelector, { timeout: 10000 });
-    await page.click(firstResultSelector);
+    // CORREÇÃO: Usando o teclado para selecionar o primeiro resultado
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
     await delay(1000);
 
     const searchButtonSelector = 'button[type="submit"]';
