@@ -6,7 +6,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const scrapeFlights = async ({ origin, destination, departureDate, returnDate }) => {
     const browser = await puppeteer.launch({
-        headless: true, // Mude para 'false' para depurar e ver a janela do navegador
+        headless: true,
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -16,45 +16,34 @@ const scrapeFlights = async ({ origin, destination, departureDate, returnDate })
     try {
         console.log('Acessando o site do Google Voos...');
         await page.goto('https://www.google.com/flights/flights', { waitUntil: 'networkidle2' });
-        await delay(3000);
+        await delay(5000); // Aumento no delay inicial
 
-        // Preenche o campo de origem
+        const inputSelectors = 'input[type="text"]';
+        await page.waitForSelector(inputSelectors, { timeout: 20000 });
+        const inputs = await page.$$(inputSelectors);
+
+        if (inputs.length < 2) {
+            console.error('Não foram encontrados campos de origem e destino.');
+            return { result: 'Campos de voo não encontrados.' };
+        }
+
+        // Preenche o campo de origem (primeiro input de texto)
         console.log('Preenchendo campo de origem...');
-        const originSelector = 'input[aria-label="De onde? "]';
-        await page.waitForSelector(originSelector, { timeout: 15000 }); // Tempo aumentado
-        await page.click(originSelector, { clickCount: 3 });
+        await inputs[0].click({ clickCount: 3 });
         await delay(1000);
         await page.keyboard.type(origin, { delay: 200 });
         await delay(2000);
         await page.keyboard.press('Enter');
         await delay(2000);
 
-        // Preenche o campo de destino
+        // Preenche o campo de destino (segundo input de texto)
         console.log('Preenchendo campo de destino...');
-        const destinationSelector = 'input[aria-label="Para onde? "]';
-        await page.waitForSelector(destinationSelector, { timeout: 15000 }); // Tempo aumentado
-        await page.click(destinationSelector, { clickCount: 3 });
+        await inputs[1].click({ clickCount: 3 });
         await delay(1000);
         await page.keyboard.type(destination, { delay: 200 });
         await delay(2000);
         await page.keyboard.press('Enter');
         await delay(2000);
-
-        // Clica no botão de data de ida para abrir o calendário
-        console.log('Abrindo calendário para data de ida...');
-        const idaButtonSelector = 'button[aria-label*="Data de ida"]';
-        await page.waitForSelector(idaButtonSelector);
-        await page.click(idaButtonSelector);
-        await delay(2000);
-
-        // Clica no botão de data de volta para abrir o calendário
-        if (returnDate) {
-            console.log('Abrindo calendário para data de volta...');
-            const voltaButtonSelector = 'button[aria-label*="Data de volta"]';
-            await page.waitForSelector(voltaButtonSelector);
-            await page.click(voltaButtonSelector);
-            await delay(2000);
-        }
 
         // Clica no botão de busca
         console.log('Clicando no botão de busca...');
