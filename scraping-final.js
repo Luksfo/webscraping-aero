@@ -16,35 +16,31 @@ const scrapeHotels = async ({ destination, checkinDate, checkoutDate }) => {
   try {
     console.log('Acessando o Booking.com...');
     await page.goto('https://www.booking.com/', { waitUntil: 'domcontentloaded' });
-    await delay(3000); // Aguarda para garantir que a página carregou
+    await delay(3000);
 
-    // Espera pelo seletor do campo de destino, com um timeout maior
     console.log('Preenchendo destino...');
     const destinationSelector = 'input[placeholder="Para onde você vai?"]';
-    await page.waitForSelector(destinationSelector, { timeout: 60000 }); // Aumentado para 60s
+    await page.waitForSelector(destinationSelector, { timeout: 60000 });
     await page.type(destinationSelector, destination);
     await delay(1000);
 
-    // Clica no primeiro resultado sugerido
     const firstResultSelector = 'ul[role="listbox"] li:first-child';
     await page.waitForSelector(firstResultSelector, { timeout: 10000 });
     await page.click(firstResultSelector);
     await delay(1000);
 
-    // Clica no botão de busca
     const searchButtonSelector = 'button[type="submit"]';
     await page.waitForSelector(searchButtonSelector, { timeout: 10000 });
     await page.click(searchButtonSelector);
     await page.waitForNavigation({ waitUntil: 'networkidle2' });
 
     console.log('Extraindo dados dos hotéis...');
-    // Seletor para extrair os resultados
     const hotelResultsSelector = 'div[data-testid="property-card"]';
     await page.waitForSelector(hotelResultsSelector, { timeout: 30000 });
 
     const hotels = await page.evaluate((selector) => {
       const hotelElements = Array.from(document.querySelectorAll(selector));
-      return hotelElements.slice(0, 5).map(el => { // Extrai os 5 primeiros hotéis
+      return hotelElements.slice(0, 5).map(el => {
         const name = el.querySelector('[data-testid="title"]')?.textContent.trim() || 'N/A';
         const price = el.querySelector('[data-testid="price-and-discounted-price"]')?.textContent.trim() || 'N/A';
         const link = el.querySelector('a')?.href || 'N/A';
