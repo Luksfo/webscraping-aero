@@ -33,7 +33,9 @@ const scrapeHotels = async ({ destination, checkinDate, checkoutDate }) => {
     const searchButtonSelector = 'button[type="submit"]';
     await page.waitForSelector(searchButtonSelector, { timeout: 10000 });
     await page.click(searchButtonSelector);
-    await page.waitForNavigation({ waitUntil: 'networkidle2' });
+    
+    // CORREÇÃO: Aumentado o tempo limite de navegação para 60 segundos
+    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 });
 
     console.log('Extraindo dados dos hotéis...');
     const hotelResultsSelector = 'div[data-testid="property-card"]';
