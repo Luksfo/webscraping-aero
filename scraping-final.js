@@ -1,7 +1,9 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
-
+curl -X POST http://localhost:8080/scrape-flights \
+-H "Content-Type: application/json" \
+-d '{"origin": "Guarulhos", "destination": "Lima", "date": "11 de out"}'
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const scrapeFlights = async ({ origin, destination, date }) => {
@@ -101,3 +103,4 @@ const scrapeFlights = async ({ origin, destination, date }) => {
 };
 
 module.exports = { scrapeFlights };
+
