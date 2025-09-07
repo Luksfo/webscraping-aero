@@ -19,12 +19,18 @@ const scrapeHotels = async ({ destination, checkinDate, checkoutDate }) => {
     await delay(5000); // Aumentado para 5s para garantir que a página carregue
 
     console.log('Preenchendo destino...');
-    const searchContainerSelector = 'div.e5aa3a9a3b';
-    const destinationInputSelector = 'input';
+    const destinationSelector = 'div[data-testid="destination-container"]';
 
-    await page.waitForSelector(searchContainerSelector, { timeout: 60000 });
-    await page.click(searchContainerSelector); // Clica no container
-    await page.type(destinationInputSelector, destination); // Digita no input que aparece
+    await page.waitForSelector(destinationSelector, { timeout: 60000 });
+    const destinationElement = await page.$(destinationSelector);
+    const box = await destinationElement.boundingBox();
+    
+    if (box) {
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    }
+    
+    await page.type(destinationElement, destination);
     await delay(1000);
 
     const firstResultSelector = 'ul[role="listbox"] li:first-child';
