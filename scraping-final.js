@@ -4,9 +4,9 @@ puppeteer.use(StealthPlugin());
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const scrapeFlights = async ({ origin, destination }) => {
+const scrapeFlights = async ({ origin, destination, date }) => {
     const browser = await puppeteer.launch({
-        headless: false, // Deixei como 'false' para que você possa ver o clique acontecendo
+        headless: true, // Mude para 'false' para ver a automação em ação
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -14,42 +14,74 @@ const scrapeFlights = async ({ origin, destination }) => {
     const page = await browser.newPage();
 
     try {
-        const searchUrl = `https://www.google.com/flights/flights?q=voos de ${origin} para ${destination}`;
+        console.log('Acessando o site do Google Voos...');
+        await page.goto('https://www.google.com/flights/flights', { waitUntil: 'networkidle2' });
+        await delay(5000);
+
+        // Preenche o campo de origem
+        console.log('Preenchendo campo de origem...');
+        const originInputSelector = 'input[placeholder="De onde?"]';
+        await page.waitForSelector(originInputSelector, { timeout: 15000 });
+        await page.type(originInputSelector, origin, { delay: 100 });
+        await delay(2000);
+        await page.keyboard.press('Enter');
+        await delay(2000);
+
+        // Preenche o campo de destino
+        console.log('Preenchendo campo de destino...');
+        const destinationInputSelector = 'input[placeholder="Para onde?"]';
+        await page.waitForSelector(destinationInputSelector, { timeout: 15000 });
+        await page.type(destinationInputSelector, destination, { delay: 100 });
+        await delay(2000);
+        await page.keyboard.press('Enter');
+        await delay(2000);
         
-        console.log(`Acessando a URL de busca: ${searchUrl}`);
-        await page.goto(searchUrl, { waitUntil: 'networkidle2' });
-        await delay(5000); // Adiciona um delay extra para a página carregar completamente
-
-        console.log('Tentando clicar no primeiro resultado de voo...');
-        // Localiza o primeiro item da lista de resultados
-        const firstFlightSelector = 'ul[role="listbox"] > li:first-child';
+        // Clica no campo de datas para abrir o calendário
+        console.log('Selecionando a data de partida...');
+        const departureDateSelector = 'div[jsname="d5c5i"]';
+        await page.waitForSelector(departureDateSelector, { timeout: 10000 });
+        await page.click(departureDateSelector);
+        await delay(2000);
         
-        const firstFlightElement = await page.waitForSelector(firstFlightSelector, { timeout: 30000 });
+        // Seleciona a data de partida (usando o seletor com base no texto)
+        const daySelector = `div[aria-label*="${date}"]`;
+        await page.waitForSelector(daySelector, { timeout: 10000 });
+        await page.click(daySelector);
+        await delay(2000);
+        
+        // Clica no botão "Concluído"
+        const doneButtonSelector = 'button[aria-label="Concluído"]';
+        await page.waitForSelector(doneButtonSelector, { timeout: 10000 });
+        await page.click(doneButtonSelector);
+        await delay(5000);
 
-        if (firstFlightElement) {
-            console.log('Primeiro resultado encontrado. Clicando nele...');
-            await firstFlightElement.click();
-            console.log('Clique realizado. Acessando a página de detalhes do voo...');
+        // Clica no botão de busca "Explore"
+        console.log('Clicando no botão de busca...');
+        const exploreButtonSelector = 'button[aria-label="Explore"]';
+        await page.waitForSelector(exploreButtonSelector, { timeout: 10000 });
+        await page.click(exploreButtonSelector);
+        await delay(8000);
+
+        // Extrai os dados do voo principal
+        console.log('Extraindo a melhor opção de voo...');
+        const bestOptionSelector = '.sF6w6d.E3c52e.yO4x3e';
+        await page.waitForSelector(bestOptionSelector, { timeout: 20000 });
+
+        const bestFlight = await page.$eval(bestOptionSelector, el => {
+            const priceElement = el.querySelector('div[jsslot] span[aria-label]');
+            const price = priceElement ? priceElement.textContent.trim() : 'N/A';
             
-            // Aguarda a navegação para a nova página
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
-            await delay(5000); // Adiciona um delay para a página de detalhes carregar
-
-            // A partir daqui, você pode adicionar a lógica para extrair os dados da página de detalhes
-            // Por enquanto, vamos apenas confirmar que funcionou
-            const newUrl = page.url();
-            console.log(`A URL atual é: ${newUrl}`);
+            const airlineElement = el.querySelector('div[jsname="j1fBcd"]');
+            const airline = airlineElement ? airlineElement.textContent.trim() : 'N/A';
             
-            if (newUrl !== searchUrl) {
-                console.log('O script navegou com sucesso para a página de detalhes do voo.');
-                return { result: 'Navegação para a página de detalhes do voo bem-sucedida.' };
-            } else {
-                return { result: 'O clique não resultou em navegação.' };
-            }
+            const linkElement = el.closest('a');
+            const link = linkElement ? linkElement.href : 'N/A';
 
-        } else {
-            return { result: 'Nenhum resultado de voo encontrado para clicar.' };
-        }
+            return { price, airline, link };
+        });
+
+        console.log('Melhor opção de voo extraída com sucesso.');
+        return { result: [bestFlight] };
 
     } catch (error) {
         console.error('Erro durante o scraping:', error);
