@@ -19,8 +19,10 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
     await delay(6000); // Aumentei o delay inicial para 6 segundos
 
     console.log('Preenchendo campo de origem...');
-    await page.waitForSelector('input[id*="origin-input"]', { timeout: 15000 });
-    await page.click('input[id*="origin-input"]');
+    // Exemplo de como usar o placeholder como seletor
+    const originInputSelector = 'input[placeholder="Origem"]';
+    await page.waitForSelector(originInputSelector, { timeout: 20000 });
+    await page.click(originInputSelector);
     await delay(2000); // Adicionei um delay antes de digitar
     for (const char of origin) await page.keyboard.type(char, { delay: 400 }); // Aumentei o delay da digitação
     await delay(2000);
@@ -111,3 +113,4 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
 };
 
 module.exports = { scrapeFlights };
+
