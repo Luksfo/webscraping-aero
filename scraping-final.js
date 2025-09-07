@@ -29,7 +29,7 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
         await page.keyboard.press('Enter');
         await delay(2000);
 
-        // Preenche o campo de destino
+        // Preenche o campo de destino usando a posição
         console.log('Preenchendo campo de destino...');
         const inputFields = await page.$$('input[placeholder*="Cidade"]');
         if (inputFields.length > 1) {
