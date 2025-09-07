@@ -30,7 +30,8 @@ const scrapeHotels = async ({ destination, checkinDate, checkoutDate }) => {
       await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     }
     
-    await page.type(destinationElement, destination);
+    // CORREÇÃO: Usando o método .type() no elemento encontrado
+    await destinationElement.type(destination);
     await delay(1000);
 
     const firstResultSelector = 'ul[role="listbox"] li:first-child';
