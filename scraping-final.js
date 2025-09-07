@@ -4,7 +4,7 @@ puppeteer.use(StealthPlugin());
 
 const scrapeFlights = async ({ origin, destination }) => {
     const browser = await puppeteer.launch({
-        headless: true,
+        headless: true, // Defina como 'false' para ver o navegador em ação
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -12,18 +12,20 @@ const scrapeFlights = async ({ origin, destination }) => {
     const page = await browser.newPage();
 
     try {
-        // Constrói a URL de busca diretamente
+        // Constrói a URL de busca diretamente com as informações de origem e destino
         const searchUrl = `https://www.google.com/flights/flights?q=voos de ${origin} para ${destination}`;
         
         console.log(`Acessando a URL de busca: ${searchUrl}`);
+        // Navega diretamente para a página de resultados, ignorando o formulário inicial
         await page.goto(searchUrl, { waitUntil: 'networkidle2' });
 
-        // Espera por um seletor mais genérico e estável que contém os resultados dos voos
+        // Espera por um contêiner principal mais estável, que encapsula os resultados
         console.log('Extraindo informações dos voos...');
-        const flightResultsContainerSelector = 'ul[role="listbox"]';
-        await page.waitForSelector(flightResultsContainerSelector, { timeout: 30000 });
+        const resultsContainerSelector = 'ul[role="listbox"]';
+        await page.waitForSelector(resultsContainerSelector, { timeout: 30000 });
 
-        const flights = await page.$$eval(`${flightResultsContainerSelector} > li`, elements => {
+        const flights = await page.$$eval(`${resultsContainerSelector} > li`, elements => {
+            // Mapeia cada elemento da lista para extrair os dados
             return elements.map(el => {
                 const priceElement = el.querySelector('.FpGSWb.c1b12d');
                 const price = priceElement ? priceElement.textContent.trim() : 'N/A';
