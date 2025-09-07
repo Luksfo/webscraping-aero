@@ -14,7 +14,7 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
     const page = await browser.newPage();
 
     try {
-        console.log('Acessando o site do Google Voos...');
+        console.log('Acessando o site do Google Flights...');
         await page.goto('https://www.google.com/flights/flights', { waitUntil: 'networkidle2' });
         await delay(3000);
 
@@ -29,7 +29,7 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
         await page.keyboard.press('Enter');
         await delay(2000);
 
-        // Preenche o campo de destino
+        // Preenche o campo de destino usando a posição
         console.log('Preenchendo campo de destino...');
         const destinationSelector = 'input[placeholder*="Para"]';
         await page.waitForSelector(destinationSelector, { timeout: 10000 });
