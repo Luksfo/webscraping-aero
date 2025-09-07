@@ -2,11 +2,9 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const scrapeFlights = async ({ origin, destination }) => {
     const browser = await puppeteer.launch({
-        headless: true, // Mude para 'false' para ver o navegador
+        headless: true,
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -14,48 +12,18 @@ const scrapeFlights = async ({ origin, destination }) => {
     const page = await browser.newPage();
 
     try {
-        console.log('Acessando o site do Google Voos...');
-        await page.goto('https://www.google.com/flights/flights', { waitUntil: 'networkidle2' });
-        await delay(5000); // Aumento no delay inicial para a página carregar
+        // Constrói a URL de busca diretamente
+        const searchUrl = `https://www.google.com/flights/flights?q=voos de ${origin} para ${destination}`;
+        
+        console.log(`Acessando a URL de busca: ${searchUrl}`);
+        await page.goto(searchUrl, { waitUntil: 'networkidle2' });
 
-        const inputSelectors = 'input[type="text"]';
-        await page.waitForSelector(inputSelectors, { timeout: 20000 });
-        const inputs = await page.$$(inputSelectors);
-
-        if (inputs.length < 2) {
-            console.error('Não foram encontrados campos de origem e destino.');
-            throw new Error('Campos de voo não encontrados.');
-        }
-
-        // Preenche o campo de origem (o primeiro input de texto)
-        console.log('Preenchendo campo de origem...');
-        await inputs[0].focus(); // Usa focus para garantir que o elemento está ativo
-        await page.keyboard.type(origin, { delay: 200 });
-        await delay(2000);
-        await page.keyboard.press('Enter');
-        await delay(2000);
-
-        // Preenche o campo de destino (o segundo input de texto)
-        console.log('Preenchendo campo de destino...');
-        await inputs[1].focus(); // Usa focus para garantir que o elemento está ativo
-        await page.keyboard.type(destination, { delay: 200 });
-        await delay(2000);
-        await page.keyboard.press('Enter');
-        await delay(2000);
-
-        // Clica no botão de busca
-        console.log('Clicando no botão de busca...');
-        const searchButtonSelector = 'button[aria-label*="Pesquisar"], button[aria-label="Explore"]';
-        await page.waitForSelector(searchButtonSelector, { timeout: 10000 });
-        await page.click(searchButtonSelector);
-        await delay(8000);
-
-        // Extrai os resultados dos voos
+        // Espera por um seletor mais genérico e estável que contém os resultados dos voos
         console.log('Extraindo informações dos voos...');
-        const flightResultsSelector = '.yQM0j.yO4x3e';
-        await page.waitForSelector(flightResultsSelector, { timeout: 20000 });
+        const flightResultsContainerSelector = 'ul[role="listbox"]';
+        await page.waitForSelector(flightResultsContainerSelector, { timeout: 30000 });
 
-        const flights = await page.$$eval(flightResultsSelector, elements => {
+        const flights = await page.$$eval(`${flightResultsContainerSelector} > li`, elements => {
             return elements.map(el => {
                 const priceElement = el.querySelector('.FpGSWb.c1b12d');
                 const price = priceElement ? priceElement.textContent.trim() : 'N/A';
