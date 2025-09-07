@@ -17,7 +17,7 @@
         "puppeteer-extra-plugin-stealth": "^2.11.2"
     },
     "engines": {
-        "node": ">=16.0.0"
+        "node": ">=20.0.0"
     },
     "author": "Nathan",
     "license": "MIT"
