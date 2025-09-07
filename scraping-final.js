@@ -6,9 +6,17 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const scrapeFlights = async ({ origin, destination, date }) => {
     const browser = await puppeteer.launch({
-        headless: true, // Mude para 'false' para ver a automação em ação
-        defaultViewport: null,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        headless: true, // Mantenha como 'true' em produção
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-infobars',
+            '--disable-extensions',
+            '--disable-gpu',
+            '--disable-dev-shm-usage',
+            '--no-zygote',
+            '--single-process'
+        ]
     });
 
     const page = await browser.newPage();
