@@ -4,9 +4,9 @@ puppeteer.use(StealthPlugin());
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const scrapeFlights = async ({ origin, destination, departureDate }) => {
+const scrapeFlights = async ({ origin, destination, departureDate, returnDate }) => {
     const browser = await puppeteer.launch({
-        headless: true,
+        headless: true, // Mude para 'false' para depurar e ver a janela do navegador
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -20,7 +20,7 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
 
         // Preenche o campo de origem
         console.log('Preenchendo campo de origem...');
-        const originSelector = 'input[placeholder*="De"]';
+        const originSelector = 'input[aria-label="De onde? "]';
         await page.waitForSelector(originSelector, { timeout: 10000 });
         await page.click(originSelector, { clickCount: 3 });
         await delay(1000);
@@ -29,18 +29,34 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
         await page.keyboard.press('Enter');
         await delay(2000);
 
-        // Preenche o campo de destino usando a posição
+        // Preenche o campo de destino
         console.log('Preenchendo campo de destino...');
-        const inputFields = await page.$$('input[placeholder*="Cidade"]');
-        if (inputFields.length > 1) {
-            await inputFields[1].click({ clickCount: 3 });
-            await delay(1000);
-            await page.keyboard.type(destination, { delay: 200 });
+        const destinationSelector = 'input[aria-label="Para onde? "]';
+        await page.waitForSelector(destinationSelector, { timeout: 10000 });
+        await page.click(destinationSelector, { clickCount: 3 });
+        await delay(1000);
+        await page.keyboard.type(destination, { delay: 200 });
+        await delay(2000);
+        await page.keyboard.press('Enter');
+        await delay(2000);
+
+        // Clica no botão de data de ida para abrir o calendário
+        console.log('Abrindo calendário para data de ida...');
+        const idaButtonSelector = 'button[aria-label*="Data de ida"]';
+        await page.waitForSelector(idaButtonSelector);
+        await page.click(idaButtonSelector);
+        await delay(2000);
+
+        // Aqui você pode adicionar a lógica para selecionar a data de ida, se precisar
+
+        // Clica no botão de data de volta para abrir o calendário
+        if (returnDate) {
+            console.log('Abrindo calendário para data de volta...');
+            const voltaButtonSelector = 'button[aria-label*="Data de volta"]';
+            await page.waitForSelector(voltaButtonSelector);
+            await page.click(voltaButtonSelector);
             await delay(2000);
-            await page.keyboard.press('Enter');
-            await delay(2000);
-        } else {
-            throw new Error('Campo de destino não encontrado.');
+            // Aqui você pode adicionar a lógica para selecionar a data de volta
         }
 
         // Clica no botão de busca
