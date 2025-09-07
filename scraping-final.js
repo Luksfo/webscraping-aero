@@ -1,65 +1,59 @@
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-puppeteer.use(StealthPlugin());
+const express = require('express');
+const axios = require('axios');
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const { JSDOM } = require('jsdom');
 
-const scrapeHotels = async ({ destination, checkinDate, checkoutDate }) => {
-  const browser = await puppeteer.launch({
-    headless: true,
-    defaultViewport: null,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
+const app = express();
+app.use(express.json());
 
-  const page = await browser.newPage();
+// Substitua SUA_CHAVE_API pela sua chave do ScrapingBee
+const API_KEY = 'SUA_CHAVE_API';
 
+// Função para fazer a requisição à API do ScrapingBee
+const getPageHtml = async (url) => {
+  const proxyUrl = `https://app.scrapingbee.com/api/v1/?api_key=${API_KEY}&url=${encodeURIComponent(url)}`;
   try {
-    console.log('Acessando o Booking.com...');
-    await page.goto('https://www.booking.com/', { waitUntil: 'domcontentloaded' });
-    await delay(5000); // Aguarda para garantir que a página carregue
-
-    console.log('Preenchendo destino...');
-    const destinationSelector = 'input[name="ss"]';
-
-    await page.waitForSelector(destinationSelector, { timeout: 60000 });
-    await page.type(destinationSelector, destination);
-    await delay(2000); // Aumentado o delay para garantir que a lista de sugestões apareça
-
-    // Usando o teclado para selecionar o primeiro resultado
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-    await delay(1000);
-
-    const searchButtonSelector = 'button[type="submit"]';
-    await page.waitForSelector(searchButtonSelector, { timeout: 10000 });
-    await page.click(searchButtonSelector);
-    
-    // CORREÇÃO: Aumentado o tempo limite de navegação para 60 segundos
-    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 });
-
-    console.log('Extraindo dados dos hotéis...');
-    const hotelResultsSelector = 'div[data-testid="property-card"]';
-    await page.waitForSelector(hotelResultsSelector, { timeout: 30000 });
-
-    const hotels = await page.evaluate((selector) => {
-      const hotelElements = Array.from(document.querySelectorAll(selector));
-      return hotelElements.slice(0, 5).map(el => {
-        const name = el.querySelector('[data-testid="title"]')?.textContent.trim() || 'N/A';
-        const price = el.querySelector('[data-testid="price-and-discounted-price"]')?.textContent.trim() || 'N/A';
-        const link = el.querySelector('a')?.href || 'N/A';
-        return { name, price, link };
-      });
-    }, hotelResultsSelector);
-
-    console.log('Scraping concluído. Fechando o navegador...');
-    return { hotels };
-
+    const response = await axios.get(proxyUrl);
+    return response.data; // Retorna o conteúdo HTML da página
   } catch (error) {
-    console.error('Erro durante o scraping:', error);
-    return { error: 'Erro durante o scraping. Verifique os logs.' };
-  } finally {
-    await browser.close();
+    console.error('Erro ao acessar a API do ScrapingBee:', error);
+    return null;
   }
 };
 
-module.exports = { scrapeHotels };
+// Adapte o endpoint para usar a nova função de scraping
+app.post('/search-hotels', async (req, res) => {
+  const { destination } = req.body;
+  const url = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(destination)}`;
+
+  console.log(`Buscando hotéis para: ${destination}`);
+  const html = await getPageHtml(url);
+
+  if (!html) {
+    return res.status(500).json({ error: 'Erro ao obter os dados do site.' });
+  }
+
+  // Agora que temos o HTML, você pode extrair os dados.
+  // Vamos usar o JSDOM para simular um navegador e encontrar os elementos.
+  const dom = new JSDOM(html);
+  const document = dom.window.document;
+  const hotels = [];
+
+  const hotelElements = document.querySelectorAll('div[data-testid="property-card"]');
+  hotelElements.forEach(el => {
+    const name = el.querySelector('[data-testid="title"]')?.textContent.trim() || 'N/A';
+    const price = el.querySelector('[data-testid="price-and-discounted-price"]')?.textContent.trim() || 'N/A';
+    const link = el.querySelector('a')?.href || 'N/A';
+    hotels.push({ name, price, link });
+  });
+
+  // Retornar os resultados dos hotéis
+  return res.json({
+    hotels: hotels
+  });
+});
+
+const port = process.env.PORT || 8080;
+app.listen(port, () => {
+  console.log(`Servidor rodando na porta ${port}`);
+});
