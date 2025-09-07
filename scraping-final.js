@@ -16,38 +16,40 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
   try {
     console.log('Acessando o site...');
     await page.goto('https://www.skyscanner.com.br/', { waitUntil: 'networkidle2' });
-    await delay(6000); // Aumentei o delay inicial para 6 segundos
+    await delay(6000);
 
+    // Clica no container do campo de origem para ativá-lo
     console.log('Preenchendo campo de origem...');
-    // Exemplo de como usar o placeholder como seletor
-    const originInputSelector = 'input[placeholder="Origem"]';
-    await page.waitForSelector(originInputSelector, { timeout: 20000 });
-    await page.click(originInputSelector);
-    await delay(2000); // Adicionei um delay antes de digitar
-    for (const char of origin) await page.keyboard.type(char, { delay: 400 }); // Aumentei o delay da digitação
+    await page.waitForSelector('div[data-testid="origin-field"]', { timeout: 15000 });
+    await page.click('div[data-testid="origin-field"]');
+    await delay(2000);
+    for (const char of origin) await page.keyboard.type(char, { delay: 400 });
     await delay(2000);
     await page.keyboard.press('Enter');
     await delay(3000);
 
+    // Clica no container do campo de destino para ativá-lo
     console.log('Preenchendo campo de destino...');
-    await page.waitForSelector('input[id*="destination-input"]', { timeout: 15000 });
-    await page.click('input[id*="destination-input"]');
+    await page.waitForSelector('div[data-testid="destination-field"]', { timeout: 15000 });
+    await page.click('div[data-testid="destination-field"]');
     await delay(2000);
     for (const char of destination) await page.keyboard.type(char, { delay: 400 });
     await delay(2000);
     await page.keyboard.press('Enter');
     await delay(3000);
 
-    // O restante do seu código segue a partir daqui
+    // Seleciona a data
     console.log('Selecionando data...');
     const [year, month, day] = departureDate.split('-');
     await page.waitForSelector('button[id*="date-input"]');
     await page.click('button[id*="date-input"]');
     await delay(1000);
 
+    // Seleciona o mês e ano no calendário
     await page.click(`div[data-test-id="month-${year}-${month.padStart(2, '0')}"]`);
     await delay(1000);
 
+    // Clica no dia específico
     const daySelector = `button[data-testid="calendar-day-${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}"]`;
     await page.waitForSelector(daySelector);
     await page.click(daySelector);
@@ -71,18 +73,22 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
 
     console.log('Tentando clicar no botão "Econômica"...');
     const economySelector = '//span[text()="Econômica"]';
-    await page.waitForXPath(economySelector, { timeout: 15000 });
-    const [economyButton] = await page.$x(economySelector);
-    if (economyButton) {
-        await economyButton.click();
-        console.log('Botão "Econômica" clicado.');
-        await delay(2000);
-    } else {
-        console.log('Botão "Econômica" não encontrado.');
-        return { result: 'Nenhum voo encontrado na classe Econômica.' };
+    try {
+        await page.waitForXPath(economySelector, { timeout: 15000 });
+        const [economyButton] = await page.$x(economySelector);
+        if (economyButton) {
+            await economyButton.click();
+            console.log('Botão "Econômica" clicado.');
+            await delay(2000);
+        } else {
+            console.log('Botão "Econômica" não encontrado.');
+            return { result: 'Nenhum voo encontrado na classe Econômica.' };
+        }
+    } catch (xpathError) {
+        console.log('XPath para o botão "Econômica" falhou. Prossiga sem clicar.');
     }
 
-    // A lógica para extrair links de booking mudou e agora requer a busca por preços e links
+    // Extrai informações dos voos
     console.log('Extraindo informações dos voos...');
     await page.waitForSelector('div[data-testid="trip-card-trip"]', { timeout: 20000 });
     
@@ -102,7 +108,6 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
         console.error('Nenhum voo encontrado.');
         return { result: 'Nenhum voo encontrado.' };
     }
-
   } catch (error) {
     console.error('Erro durante o scraping:', error);
     throw error;
@@ -113,4 +118,3 @@ const scrapeFlights = async ({ origin, destination, departureDate }) => {
 };
 
 module.exports = { scrapeFlights };
-
