@@ -6,7 +6,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const scrapeFlights = async ({ origin, destination, departureDate, returnDate }) => {
     const browser = await puppeteer.launch({
-        headless: true,
+        headless: true, // Mude para 'false' para ver o navegador
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -16,18 +16,20 @@ const scrapeFlights = async ({ origin, destination, departureDate, returnDate })
     try {
         console.log('Acessando o site do Google Voos...');
         await page.goto('https://www.google.com/flights/flights', { waitUntil: 'networkidle2' });
-        await delay(5000); // Aumento no delay inicial
+        await delay(5000); // Aumento no delay inicial para a página carregar
 
+        // Seleciona todos os campos de texto na página
+        console.log('Buscando campos de input de voo...');
         const inputSelectors = 'input[type="text"]';
         await page.waitForSelector(inputSelectors, { timeout: 20000 });
         const inputs = await page.$$(inputSelectors);
 
         if (inputs.length < 2) {
             console.error('Não foram encontrados campos de origem e destino.');
-            return { result: 'Campos de voo não encontrados.' };
+            throw new Error('Campos de voo não encontrados.');
         }
 
-        // Preenche o campo de origem (primeiro input de texto)
+        // Preenche o campo de origem (o primeiro input de texto)
         console.log('Preenchendo campo de origem...');
         await inputs[0].click({ clickCount: 3 });
         await delay(1000);
@@ -36,7 +38,7 @@ const scrapeFlights = async ({ origin, destination, departureDate, returnDate })
         await page.keyboard.press('Enter');
         await delay(2000);
 
-        // Preenche o campo de destino (segundo input de texto)
+        // Preenche o campo de destino (o segundo input de texto)
         console.log('Preenchendo campo de destino...');
         await inputs[1].click({ clickCount: 3 });
         await delay(1000);
