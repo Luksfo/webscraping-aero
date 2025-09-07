@@ -21,7 +21,7 @@ const scrapeHotels = async ({ destination, checkinDate, checkoutDate }) => {
     // Espera pelo seletor do campo de destino, com um timeout maior
     console.log('Preenchendo destino...');
     const destinationSelector = 'input[placeholder="Para onde você vai?"]';
-    await page.waitForSelector(destinationSelector, { timeout: 30000 }); // Aumentado para 30s
+    await page.waitForSelector(destinationSelector, { timeout: 60000 }); // Aumentado para 60s
     await page.type(destinationSelector, destination);
     await delay(1000);
 
@@ -64,5 +64,3 @@ const scrapeHotels = async ({ destination, checkinDate, checkoutDate }) => {
 };
 
 module.exports = { scrapeHotels };
-
-
