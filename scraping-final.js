@@ -23,14 +23,15 @@ const scrapeHotels = async ({ destination, checkin, checkout }) => {
 
     try {
         console.log('Acessando o Booking.com...');
-        await page.goto('https://www.booking.com', { waitUntil: 'networkidle2' });
+        await page.goto('https://www.booking.com/', { waitUntil: 'domcontentloaded' });
         await delay(5000);
 
         // Preenche o campo de destino
         console.log('Preenchendo destino...');
         const destinationInputSelector = '#ss';
-        await page.waitForSelector(destinationInputSelector, { timeout: 15000 });
-        await page.type(destinationInputSelector, destination, { delay: 100 });
+        await page.waitForTimeout(5000);
+        await page.waitForSelector('#ss', { timeout: 30000 });
+        await page.type('#ss', destino);
         await delay(2000);
         await page.keyboard.press('Enter');
         await delay(2000);
@@ -98,3 +99,4 @@ const scrapeHotels = async ({ destination, checkin, checkout }) => {
 };
 
 module.exports = { scrapeHotels };
+
