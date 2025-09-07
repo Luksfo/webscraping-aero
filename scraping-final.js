@@ -16,12 +16,15 @@ const scrapeHotels = async ({ destination, checkinDate, checkoutDate }) => {
   try {
     console.log('Acessando o Booking.com...');
     await page.goto('https://www.booking.com/', { waitUntil: 'domcontentloaded' });
-    await delay(3000);
+    await delay(5000); // Aumentado para 5s para garantir que a página carregue
 
     console.log('Preenchendo destino...');
-    const destinationSelector = 'input[placeholder="Para onde você vai?"]';
-    await page.waitForSelector(destinationSelector, { timeout: 60000 });
-    await page.type(destinationSelector, destination);
+    const searchContainerSelector = 'div.e5aa3a9a3b';
+    const destinationInputSelector = 'input';
+
+    await page.waitForSelector(searchContainerSelector, { timeout: 60000 });
+    await page.click(searchContainerSelector); // Clica no container
+    await page.type(destinationInputSelector, destination); // Digita no input que aparece
     await delay(1000);
 
     const firstResultSelector = 'ul[role="listbox"] li:first-child';
