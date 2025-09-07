@@ -12,6 +12,7 @@
         "https-proxy-agent": "^7.0.6",
         "node-fetch": "^3.3.2",
         "puppeteer": "^22.15.0",
+        "jsdom": "^24.1.0",
         "puppeteer-extra": "^3.3.6",
         "puppeteer-extra-plugin-stealth": "^2.11.2"
     },
@@ -21,3 +22,4 @@
     "author": "Nathan",
     "license": "MIT"
 }
+
