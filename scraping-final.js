@@ -4,7 +4,7 @@ puppeteer.use(StealthPlugin());
 
 const scrapeFlights = async ({ origin, destination }) => {
     const browser = await puppeteer.launch({
-        headless: true, // Defina como 'false' para ver o navegador em ação
+        headless: true,
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -12,27 +12,26 @@ const scrapeFlights = async ({ origin, destination }) => {
     const page = await browser.newPage();
 
     try {
-        // Constrói a URL de busca diretamente com as informações de origem e destino
         const searchUrl = `https://www.google.com/flights/flights?q=voos de ${origin} para ${destination}`;
         
         console.log(`Acessando a URL de busca: ${searchUrl}`);
-        // Navega diretamente para a página de resultados, ignorando o formulário inicial
         await page.goto(searchUrl, { waitUntil: 'networkidle2' });
 
-        // Espera por um contêiner principal mais estável, que encapsula os resultados
         console.log('Extraindo informações dos voos...');
         const resultsContainerSelector = 'ul[role="listbox"]';
         await page.waitForSelector(resultsContainerSelector, { timeout: 30000 });
 
         const flights = await page.$$eval(`${resultsContainerSelector} > li`, elements => {
-            // Mapeia cada elemento da lista para extrair os dados com os novos seletores
             return elements.map(el => {
-                const priceElement = el.querySelector('div[jsslot] span[aria-label]');
+                // Novo seletor definitivo para o preço
+                const priceElement = el.querySelector('div[aria-hidden="true"][jsslot] span[aria-label]');
                 const price = priceElement ? priceElement.textContent.trim() : 'N/A';
                 
-                const airlineElement = el.querySelector('div[jsname="j1fBcd"]');
+                // Novo seletor para a companhia aérea
+                const airlineElement = el.querySelector('div.sSHqwe.tPgKwe.ogfYpf');
                 const airline = airlineElement ? airlineElement.textContent.trim() : 'N/A';
                 
+                // O seletor do link continua funcionando bem
                 const linkElement = el.closest('a');
                 const link = linkElement ? linkElement.href : 'N/A';
 
