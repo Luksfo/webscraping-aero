@@ -6,7 +6,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const scrapeFlights = async ({ origin, destination, date }) => {
     const browser = await puppeteer.launch({
-        headless: true, // Keep 'true' for production
+        headless: true, // Mantenha como 'true' para produção
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -24,22 +24,26 @@ const scrapeFlights = async ({ origin, destination, date }) => {
     try {
         console.log('Acessando o site do Google Voos...');
         await page.goto('https://www.google.com/flights/flights', { waitUntil: 'networkidle2' });
-        await delay(8000);
+        await delay(8000); // Aumento no tempo de espera inicial
 
-        // Preenche o campo de origem
+        // Seleciona os campos de origem e destino por ordem de ocorrência
+        const inputFields = await page.$$('input[type="text"]');
+
+        if (inputFields.length < 2) {
+            console.error('Não foram encontrados os campos de origem e destino na página.');
+            throw new Error('Campos de voo não encontrados.');
+        }
+
+        // Preenche o campo de origem (o primeiro input)
         console.log('Preenchendo campo de origem...');
-        const originInputSelector = 'input[placeholder="De onde?"]';
-        await page.waitForSelector(originInputSelector, { timeout: 15000 });
-        await page.type(originInputSelector, origin, { delay: 100 });
+        await inputFields[0].type(origin, { delay: 100 });
         await delay(2000);
         await page.keyboard.press('Enter');
         await delay(2000);
 
-        // Preenche o campo de destino
+        // Preenche o campo de destino (o segundo input)
         console.log('Preenchendo campo de destino...');
-        const destinationInputSelector = 'input[placeholder="Para onde?"]';
-        await page.waitForSelector(destinationInputSelector, { timeout: 15000 });
-        await page.type(destinationInputSelector, destination, { delay: 100 });
+        await inputFields[1].type(destination, { delay: 100 });
         await delay(2000);
         await page.keyboard.press('Enter');
         await delay(2000);
